@@ -1,0 +1,6 @@
+# To submit:
+#sbatch -p short test.sh
+
+# To check:
+#squeue
+#scontrol show job <job_id>

@@ -1,0 +1,83 @@
+Checking PATH ...
+/home/uf/jlow/jftest2/miniconda3/envs/tensorflow_conda/bin:/home/uf/jlow/jftest2/miniconda3/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:/opt/aislurm/custom:/opt/aislurm/bin:/opt/aislurm/sbin:/apps/aislurm/custom:/apps/aislurm/bin:/apps/aislurm/sbin:/home/uf/jlow/jftest2/miniconda3/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:/opt/aislurm/custom:/opt/aislurm/bin:/opt/aislurm/sbin:/apps/aislurm/custom:/apps/aislurm/bin:/apps/aislurm/sbin:/usr/lib64/qt-3.3/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/ibutils/bin:/home/uf/jlow/.local/bin:/home/uf/jlow/bin
+Checking LD_LIBRARY_PATH ...
+/home/uf/jlow/jftest2/miniconda3/envs/tensorflow_conda/lib:/home/uf/jlow/jftest2/miniconda3/lib:/opt/aislurm/lib:/apps/aislurm/lib:/home/uf/jlow/jftest2/miniconda3/lib:/opt/aislurm/lib:/apps/aislurm/lib:
+Checking visible devices ...
+7
+Checking conda ...
+/home/uf/jlow/jftest2/miniconda3/bin/conda
+Checking python ...
+/home/uf/jlow/jftest2/miniconda3/envs/tensorflow_conda/bin/python
+Checking nvidia-smi ...
+Tue Jul 10 13:25:05 2018       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 396.26                 Driver Version: 396.26                    |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|===============================+======================+======================|
+|   0  Tesla P100-PCIE...  On   | 00000000:08:00.0 Off |                    0 |
+| N/A   31C    P0    32W / 250W |      0MiB / 16280MiB |      0%      Default |
++-------------------------------+----------------------+----------------------+
+|   1  Tesla P100-PCIE...  On   | 00000000:0B:00.0 Off |                    0 |
+| N/A   31C    P0    30W / 250W |      0MiB / 16280MiB |      0%      Default |
++-------------------------------+----------------------+----------------------+
+|   2  Tesla P100-PCIE...  On   | 00000000:0E:00.0 Off |                    0 |
+| N/A   37C    P0    32W / 250W |      0MiB / 16280MiB |      0%      Default |
++-------------------------------+----------------------+----------------------+
+|   3  Tesla P100-PCIE...  On   | 00000000:11:00.0 Off |                    0 |
+| N/A   33C    P0    31W / 250W |      0MiB / 16280MiB |      0%      Default |
++-------------------------------+----------------------+----------------------+
+|   4  Tesla P100-PCIE...  On   | 00000000:16:00.0 Off |                    0 |
+| N/A   27C    P0    32W / 250W |      0MiB / 16280MiB |      0%      Default |
++-------------------------------+----------------------+----------------------+
+|   5  Tesla P100-PCIE...  On   | 00000000:19:00.0 Off |                    0 |
+| N/A   31C    P0    31W / 250W |      0MiB / 16280MiB |      0%      Default |
++-------------------------------+----------------------+----------------------+
+|   6  Tesla P100-PCIE...  On   | 00000000:1C:00.0 Off |                    0 |
+| N/A   37C    P0    33W / 250W |      0MiB / 16280MiB |      0%      Default |
++-------------------------------+----------------------+----------------------+
+|   7  Tesla P100-PCIE...  On   | 00000000:22:00.0 Off |                    0 |
+| N/A   36C    P0    31W / 250W |      0MiB / 16280MiB |      0%      Default |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                       GPU Memory |
+|  GPU       PID   Type   Process name                             Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+2018-07-10 13:25:09.998000: I tensorflow/core/platform/cpu_feature_guard.cc:140] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+2018-07-10 13:25:10.384843: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1356] Found device 0 with properties: 
+name: Tesla P100-PCIE-16GB major: 6 minor: 0 memoryClockRate(GHz): 1.3285
+pciBusID: 0000:22:00.0
+totalMemory: 15.90GiB freeMemory: 15.61GiB
+2018-07-10 13:25:10.384884: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1435] Adding visible gpu devices: 0
+2018-07-10 13:25:14.544664: I tensorflow/core/common_runtime/gpu/gpu_device.cc:923] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-07-10 13:25:14.544717: I tensorflow/core/common_runtime/gpu/gpu_device.cc:929]      0 
+2018-07-10 13:25:14.544725: I tensorflow/core/common_runtime/gpu/gpu_device.cc:942] 0:   N 
+2018-07-10 13:25:14.545168: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1053] Created TensorFlow device (/device:GPU:0 with 15135 MB memory) -> physical GPU (device: 0, name: Tesla P100-PCIE-16GB, pci bus id: 0000:22:00.0, compute capability: 6.0)
+2018-07-10 13:25:14.736920: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1435] Adding visible gpu devices: 0
+2018-07-10 13:25:14.736990: I tensorflow/core/common_runtime/gpu/gpu_device.cc:923] Device interconnect StreamExecutor with strength 1 edge matrix:
+2018-07-10 13:25:14.736998: I tensorflow/core/common_runtime/gpu/gpu_device.cc:929]      0 
+2018-07-10 13:25:14.737004: I tensorflow/core/common_runtime/gpu/gpu_device.cc:942] 0:   N 
+2018-07-10 13:25:14.737202: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1053] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 15135 MB memory) -> physical GPU (device: 0, name: Tesla P100-PCIE-16GB, pci bus id: 0000:22:00.0, compute capability: 6.0)
+1.8.0
+[name: "/device:CPU:0"
+device_type: "CPU"
+memory_limit: 268435456
+locality {
+}
+incarnation: 2003066395232068797
+, name: "/device:GPU:0"
+device_type: "GPU"
+memory_limit: 15870492672
+locality {
+  bus_id: 1
+  links {
+  }
+}
+incarnation: 2185384314582770544
+physical_device_desc: "device: 0, name: Tesla P100-PCIE-16GB, pci bus id: 0000:22:00.0, compute capability: 6.0"
+]
+Hello, TensorFlow!

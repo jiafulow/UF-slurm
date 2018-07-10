@@ -1,0 +1,2 @@
+#srun -N1 -l locate libcublas.so
+#srun --pty -p short /bin/bash

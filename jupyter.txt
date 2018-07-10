@@ -1,0 +1,1 @@
+#nohup jupyter nbconvert --ExecutePreprocessor.timeout=-1 --to notebook --execute mykeras2_noroot.ipynb --output mykeras2_noroot_evaluated.ipynb &

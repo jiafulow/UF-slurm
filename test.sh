@@ -36,6 +36,8 @@ echo 'Checking PATH ...'
 echo $PATH
 echo 'Checking LD_LIBRARY_PATH ...'
 echo $LD_LIBRARY_PATH
+echo 'Checking PYTHONPATH ...'
+echo $PYTHONPATH
 echo 'Checking visible devices ...'
 echo $CUDA_VISIBLE_DEVICES
 echo 'Checking conda ...'

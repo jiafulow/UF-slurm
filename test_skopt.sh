@@ -54,6 +54,6 @@ nvidia-smi
 # Run python
 python test.py
 
-# Run jupyter
+# Run skopt
 export CMSSW_VERSION=
-jupyter-nbconvert --ExecutePreprocessor.timeout=-1 --to notebook --execute mykeras4.ipynb --output mykeras4_evaluated.ipynb
+python nn_skopt.py

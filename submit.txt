@@ -1,6 +1,11 @@
-# To submit:
+# To submit (short=8hrs/normal=24hrs/long=72hrs):
 #sbatch -p short test.sh
+#sbatch -p normal test_jupyter.sh
+#sbatch -p long test_skopt.sh
 
 # To check:
 #squeue
 #scontrol show job <job_id>
+
+# To cancel:
+#scancel <job_id>

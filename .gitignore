@@ -2,3 +2,10 @@
 
 *.h5
 *.json
+*.pyc
+
+
+hpe_default.tgz
+test8.log
+keras_output_*.txt
+res_gp.pkl

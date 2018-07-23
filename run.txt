@@ -1,2 +1,2 @@
-#srun -N1 -l locate libcublas.so
+#srun -N1 -l nvidia-smi
 #srun --pty -p short /bin/bash

@@ -6,7 +6,8 @@ logger = getLogger()
 
 adjust_scale = 3
 
-learning_rate = 0.00113
+#learning_rate = 0.00113
+learning_rate = 0.0033
 
 mask_value = 100.
 
@@ -18,9 +19,14 @@ discr_loss_weight = 10.
 
 add_noise = True
 
-infile_muon = '../test7/histos_tba.14.npz'
+l1_reg = 0.0
 
-infile_pileup = '../test7/histos_tbd.14.npz'
+l2_reg = 0.0
+
+infile_muon = '/scratch/CMS/L1MuonTrigger/P2_10_1_5/SingleMuon_Toy_2GeV/histos_tba.16.npz'
+
+infile_pileup = '/scratch/CMS/L1MuonTrigger/P2_10_1_5/SingleMuon_Toy_2GeV/histos_tbd.16.npz'
+
 
 # ______________________________________________________________________________
 # Import all the libs
@@ -45,10 +51,13 @@ from keras import backend as K
 logger.info('Using keras {0}'.format(keras.__version__))
 logger.info('.. list devices: {0}'.format(K.get_session().list_devices()))
 
+import scipy
+logger.info('Using scipy {0}'.format(scipy.__version__))
+
 import sklearn
 logger.info('Using sklearn {0}'.format(sklearn.__version__))
 
 import matplotlib.pyplot as plt
-from matplotlib import colors
+#from matplotlib import colors
 #%matplotlib inline
 

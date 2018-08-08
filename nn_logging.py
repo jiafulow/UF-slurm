@@ -19,6 +19,7 @@ def getLogger():
   #formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
   formatter = logging.Formatter('%(asctime)s [%(levelname)-8s] %(message)s')
   fh.setFormatter(formatter)
+  formatter = logging.Formatter('[%(levelname)-8s] %(message)s')
   ch.setFormatter(formatter)
 
   # add the handlers to the logger

@@ -2,6 +2,7 @@
 #sbatch -p short test.sh
 #sbatch -p normal test_jupyter.sh
 #sbatch -p long test_skopt.sh
+#sbatch -p long test_gridsearch.sh
 
 # To check:
 #squeue

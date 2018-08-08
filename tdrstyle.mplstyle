@@ -1,0 +1,26 @@
+### FIGURE
+figure.figsize : 4.2, 4.2
+figure.dpi : 150
+
+### FONT
+font.family : sans-serif
+font.size : 10.0
+#font.sans-serif : Helvetica, Arial, sans-serif
+
+### AXES
+axes.titlesize : large
+axes.labelsize : large
+axes.grid : True
+
+### LINES
+lines.linewidth : 2
+lines.markersize : 10
+
+### TICKS
+xtick.labelsize : medium
+ytick.labelsize : medium
+xtick.minor.visible : True
+ytick.minor.visible : True
+
+### Legend
+legend.fontsize : medium

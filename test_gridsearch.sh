@@ -54,6 +54,6 @@ nvidia-smi
 # Run python
 python test.py
 
-# Run jupyter
+# Run skopt
 export CMSSW_VERSION=
-jupyter-nbconvert --ExecutePreprocessor.timeout=-1 --to notebook --execute mykeras6.ipynb --output mykeras6_evaluated.ipynb
+python nn_gridsearch.py

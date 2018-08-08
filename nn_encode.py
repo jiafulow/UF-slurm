@@ -8,6 +8,8 @@ nvariables_input = (nlayers * 7) + 3
 
 nparameters_input = 3
 
+
+# ______________________________________________________________________________
 class Encoder(object):
 
   def __init__(self, x, y, adjust_scale=0, reg_pt_scale=1.0):
@@ -51,7 +53,7 @@ class Encoder(object):
 
       # Subtract median theta from hit thetas
       self.x_theta_median  = np.nanmedian(self.x_theta[:,:5], axis=1)  # CSC only
-      self.x_theta_median[np.isnan(self.x_theta_median)] = np.nanmedian(self.x_theta[np.isnan(self.x_theta_median)], axis=1)  # use all
+      #self.x_theta_median[np.isnan(self.x_theta_median)] = np.nanmedian(self.x_theta[np.isnan(self.x_theta_median)], axis=1)  # use all types
       self.x_theta_median  = self.x_theta_median[:, np.newaxis]
       self.x_theta        -= self.x_theta_median
 
@@ -68,31 +70,33 @@ class Encoder(object):
         x_theta_tmp = np.abs(self.x_theta) > 1.0
       elif adjust_scale == 2:  # adjust by hand
         theta_cuts    = np.array((6., 6., 6., 6., 6., 12., 12., 12., 12., 9., 9., 9.), dtype=np.float32)
-        x_theta_tmp   = np.abs(self.x_theta) > theta_cuts
+        x_theta_tmp   = np.where(np.isnan(self.x_theta), 99., self.x_theta)  # take care of nan
+        x_theta_tmp   = np.abs(x_theta_tmp) > theta_cuts
         self.x_phi   *= 0.000991  # GE1/1 dphi linear correlation with q/pT
         self.x_theta *= (1/12.)   # 12 integer theta units
         self.x_bend  *= 0.188082  # ME1/2 bend linear correlation with q/pT
         x_ring_tmp    = self.x_ring.astype(np.int32)
-        x_ring_tmp    = (x_ring_tmp == 1) | (x_ring_tmp == 4)
-        self.x_ring[x_ring_tmp] = 0  # ring 1,4 -> 0
-        self.x_ring[~x_ring_tmp] = 1 # ring 2,3 -> 1
+        x_ring_tmp    = (x_ring_tmp == 2) | (x_ring_tmp == 3)
+        self.x_ring[x_ring_tmp] = 1  # ring 2,3 -> 1
+        self.x_ring[~x_ring_tmp] = 0 # ring 1,4 -> 0
         x_fr_tmp      = self.x_fr.astype(np.int32)
-        x_fr_tmp      = (x_fr_tmp == 0)
-        self.x_fr[x_fr_tmp] = 0  # rear chamber
-        self.x_fr[~x_fr_tmp] = 1  # front chamber
+        x_fr_tmp      = (x_fr_tmp == 1)
+        self.x_fr[x_fr_tmp] = 1   # front chamber -> 1
+        self.x_fr[~x_fr_tmp] = 0  # rear chamber  -> 0
       elif adjust_scale == 3:  # adjust by hand #2
         #theta_cuts    = np.array((6., 6., 6., 6., 6., 12., 12., 12., 12., 9., 9., 9.), dtype=np.float32)
         theta_cuts    = np.array((6., 6., 6., 6., 6., 10., 10., 10., 10., 8., 8., 8.), dtype=np.float32)
-        x_theta_tmp   = np.abs(self.x_theta) > theta_cuts
+        x_theta_tmp   = np.where(np.isnan(self.x_theta), 99., self.x_theta)  # take care of nan
+        x_theta_tmp   = np.abs(x_theta_tmp) > theta_cuts
         self.x_bend[:, 5:9] = 0  # do not use RPC bend
         x_ring_tmp    = self.x_ring.astype(np.int32)
-        x_ring_tmp    = (x_ring_tmp == 1) | (x_ring_tmp == 4)
-        self.x_ring[x_ring_tmp] = 0  # ring 1,4 -> 0
-        self.x_ring[~x_ring_tmp] = 1 # ring 2,3 -> 1
+        x_ring_tmp    = (x_ring_tmp == 2) | (x_ring_tmp == 3)
+        self.x_ring[x_ring_tmp] = 1  # ring 2,3 -> 1
+        self.x_ring[~x_ring_tmp] = 0 # ring 1,4 -> 0
         x_fr_tmp      = self.x_fr.astype(np.int32)
-        x_fr_tmp      = (x_fr_tmp == 0)
-        self.x_fr[x_fr_tmp] = 0  # rear chamber
-        self.x_fr[~x_fr_tmp] = 1  # front chamber
+        x_fr_tmp      = (x_fr_tmp == 1)
+        self.x_fr[x_fr_tmp] = 1   # front chamber -> 1
+        self.x_fr[~x_fr_tmp] = 0  # rear chamber  -> 0
         s = [ 0.005938,  0.012215, -0.015295, -0.01128 , -0.008312,  0.013397,
              -0.026915, -0.009992, -0.00771 ,  0.00414 , -0.01836 ,  0.005182,
               0.601718,  0.581062,  1.470157,  1.488481,  1.062894,  0.219505,

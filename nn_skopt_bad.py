@@ -56,6 +56,8 @@ callbacks_list = [lr_decay,modelbestcheck]
 # ______________________________________________________________________________
 # Create BayesSearchCV
 
+#FIXME
+
 from sklearn.model_selection import cross_val_score, KFold
 from skopt.space import Space, Real, Integer, Categorical
 from skopt import BayesSearchCV

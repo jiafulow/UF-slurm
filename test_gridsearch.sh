@@ -2,23 +2,10 @@
 #SBATCH -o logs/output.%j.out
 #SBATCH -e logs/output.%j.out
 
-# Root directory
-export JFTEST=/home/uf/jlow/jftest2/miniconda3
+# Set environment variables
+source startup.sh
 
-# CUDA environment variables
-#export CUDA_HOME=/opt/cuda9.2
-#export CUDNN_HOME=/opt/cuda9.2/cuDNN7.1
-#export CUDA_VISIBLE_DEVICES=1
-#export PATH=$CUDA_HOME/bin:$PATH
-#export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$CUDNN_HOME/lib64:$LD_LIBRARY_PATH
-
-# Anaconda environment variables
-export PATH=$JFTEST/bin:$PATH
-export LD_LIBRARY_PATH=$JFTEST/lib:$LD_LIBRARY_PATH
-
-# Virtual env
-#export VENV=tensorflow
-#export VENV=tensorflow_gpu
+# Activate conda env
 export VENV=tensorflow_conda
 source activate $VENV
 

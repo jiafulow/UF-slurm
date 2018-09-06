@@ -3,7 +3,7 @@
 *.h5
 *.json
 *.pyc
-
+nohup.out
 
 hpe_default.tgz
 test8.log

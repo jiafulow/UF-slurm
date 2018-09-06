@@ -15,17 +15,28 @@ discr_pt_cut = 14.
 
 reg_pt_scale = 100.
 
-discr_loss_weight = 10.
+discr_loss_weight = 20.
 
 add_noise = True
+
+mixture = 6
 
 l1_reg = 0.0
 
 l2_reg = 0.0
 
-infile_muon = '/scratch/CMS/L1MuonTrigger/P2_10_1_5/SingleMuon_Toy_2GeV/histos_tba.16.npz'
+infile_muon = '../test7/histos_tba.17.npz'
 
-infile_pileup = '/scratch/CMS/L1MuonTrigger/P2_10_1_5/SingleMuon_Toy_2GeV/histos_tbd.16.npz'
+infile_pileup = '../test7/histos_tbd.17.npz'
+
+infile_images = '../test7/histos_tbe.17.npz'
+
+
+use_hpe = True
+if use_hpe:
+  infile_muon = '/scratch/CMS/L1MuonTrigger/P2_10_1_5/SingleMuon_Toy_2GeV/histos_tba.17.npz'
+  infile_pileup = '/scratch/CMS/L1MuonTrigger/P2_10_1_5/SingleMuon_Toy_2GeV/histos_tbd.17.npz'
+  infile_images = '/scratch/CMS/L1MuonTrigger/P2_10_1_5/SingleMuon_Toy_2GeV/histos_tbe.17.npz'
 
 
 # ______________________________________________________________________________
@@ -35,7 +46,7 @@ import sys
 os.environ['KERAS_BACKEND'] = 'tensorflow'
 OLD_STDOUT = sys.stdout
 
-logger.info('Using cmssw {0}'.format(os.environ['CMSSW_VERSION']))
+logger.info('Using cmssw {0}'.format(os.environ['CMSSW_VERSION'] if 'CMSSW_VERSION' in os.environ else 'n/a'))
 
 import numpy as np
 np.random.seed(2023)

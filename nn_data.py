@@ -10,7 +10,7 @@ from nn_encode import Encoder
 
 
 # ______________________________________________________________________________
-def muon_data(filename, adjust_scale=0, reg_pt_scale=1.0):
+def muon_data(filename, adjust_scale=0, reg_pt_scale=1.0, correct_for_eta=False):
   try:
     logger.info('Loading muon data from {0} ...'.format(filename))
     loaded = np.load(filename)
@@ -21,18 +21,32 @@ def muon_data(filename, adjust_scale=0, reg_pt_scale=1.0):
   except:
     logger.error('Failed to load data from file: {0}'.format(filename))
 
+  assert(the_variables.shape[0] == the_parameters.shape[0])
+
   encoder = Encoder(the_variables, the_parameters, adjust_scale=adjust_scale, reg_pt_scale=reg_pt_scale)
-  x, y, w, x_mask = encoder.get_x(), encoder.get_y(), encoder.get_w(), encoder.get_x_mask()
+  if correct_for_eta:
+    x, y, w, x_mask = encoder.get_x(), encoder.get_y_corrected_for_eta(), encoder.get_w(), encoder.get_x_mask()
+  else:
+    x, y, w, x_mask = encoder.get_x(), encoder.get_y(), encoder.get_w(), encoder.get_x_mask()
   assert(np.isfinite(x).all())
   return x, y, w, x_mask
 
 
-def muon_data_split(filename, adjust_scale=0, reg_pt_scale=1.0, test_size=0.5):
-  x, y, w, x_mask = muon_data(filename, adjust_scale=adjust_scale, reg_pt_scale=reg_pt_scale)
+def muon_data_split(filename, adjust_scale=0, reg_pt_scale=1.0, test_size=0.5, correct_for_eta=False):
+  x, y, w, x_mask = muon_data(filename, adjust_scale=adjust_scale, reg_pt_scale=reg_pt_scale, correct_for_eta=correct_for_eta)
 
   # Split dataset in training and testing
   x_train, x_test, y_train, y_test, w_train, w_test, x_mask_train, x_mask_test = train_test_split(x, y, w, x_mask, test_size=test_size)
   logger.info('Loaded # of training and testing events: {0}'.format((x_train.shape[0], x_test.shape[0])))
+
+  # Check for cases where the number of events in the last batch could be too few
+  train_num_samples = int(x_train.shape[0] * 0.9)
+  val_num_samples = x_train.shape[0] - train_num_samples
+  batch_size = 128
+  if (train_num_samples%batch_size) < 100:
+    logger.warning('The last batch for training could be too few! ({0}%{1})={2}. Please change test_size.'.format(train_num_samples, batch_size, train_num_samples%batch_size))
+  if (val_num_samples%batch_size) < 100:
+    logger.warning('The last batch for validation could be too few! ({0}%{1})={2}. Please change test_size.'.format(val_num_samples, batch_size, val_num_samples%batch_size))
   return x_train, x_test, y_train, y_test, w_train, w_test, x_mask_train, x_mask_test
 
 
@@ -49,6 +63,7 @@ def pileup_data(filename, adjust_scale=0, reg_pt_scale=1.0):
   except:
     logger.error('Failed to load data from file: {0}'.format(filename))
 
+  assert(the_variables.shape[0] == the_auxiliaries.shape[0])
   assert(the_auxiliaries.shape[1] == 4)  # jobid, ievt, highest_part_pt, highest_track_pt
 
   encoder = Encoder(the_variables, the_parameters, adjust_scale=adjust_scale, reg_pt_scale=reg_pt_scale)
@@ -82,15 +97,15 @@ def mix_training_inputs(x_train, y_train, pu_x_train, pu_y_train, pu_aux_train, 
   assert(pu_x_train.shape[0] == pu_y_train[1].shape[0])
   num_samples = pu_x_train.shape[0]
   index_array = np.arange(num_samples)
-  index_array_ext = np.tile(index_array, 14)  # 14 is chosen to make sure pu_x_train_ext has more entries than x_train
+  index_array_ext = np.tile(index_array, 15)  # 15 is chosen to make sure pu_x_train_ext has more entries than x_train
   pu_x_train_ext = pu_x_train[index_array_ext]
   pu_y_train_ext = [pu_y_train[0][index_array_ext], pu_y_train[1][index_array_ext]]
 
   assert(len(y_train) == 2)
   assert(x_train.shape[0] == y_train[0].shape[0])
   assert(x_train.shape[0] == y_train[1].shape[0])
-  if not (x_train.shape[0] < pu_x_train_ext.shape[0]):
-    raise Exception('pu_x_train_ext is required to have more entries than x_train. failed check {0} < {1}'.format(x_train.shape[0], pu_x_train_ext.shape[0]))
+  if not (pu_x_train_ext.shape[0] >= x_train.shape[0]):
+    raise Exception('pu_x_train_ext is required to have more entries than x_train. Make sure {0} >= {1}'.format(pu_x_train_ext.shape[0], x_train.shape[0]))
   num_samples = x_train.shape[0]
   index_array = np.arange(num_samples)
   #np.random.shuffle(index_array)

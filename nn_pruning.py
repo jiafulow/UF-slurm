@@ -16,6 +16,8 @@ logger = getLogger()
 #   https://github.com/hls-fpga-machine-learning/keras-training/blob/muon/train/prune.py
 
 def prune_model(model, percentile=50.):
+  sess = K.get_session()
+
   # Find weights
   allWeights = []
   allWeightsNonRel = []
@@ -42,9 +44,9 @@ def prune_model(model, percentile=50.):
           tensor_reduce_max_0 = tf.reduce_max(tensor_abs,axis=-1)
           tensor_reduce_max_1 = tf.reduce_max(tensor_reduce_max_0,axis=-1)
           tensor_reduce_max_2 = tf.reduce_max(tensor_reduce_max_1,axis=-1)
-        with tf.Session():
-          #l1norm_val = float(l1norm.eval())
-          tensor_max = float(tensor_reduce_max_2.eval())
+
+        #l1norm_val = float(l1norm.eval(session=sess))
+        tensor_max = float(tensor_reduce_max_2.eval(session=sess))
         it = np.nditer(my_weights, flags=['multi_index'], op_flags=['readonly'])
         while not it.finished:
           w = it[0]
@@ -57,6 +59,7 @@ def prune_model(model, percentile=50.):
         allWeightsByLayer[layer.name] = np.asarray(weightsByLayer)
         allWeightsByLayerNonRel[layer.name] = np.asarray(weightsByLayerNonRel)
         tensorMaxByLayer[layer.name] = tensor_max
+
   allWeightsArray = np.asarray(allWeights)
   allWeightsArrayNonRel = np.asarray(allWeightsNonRel)
 
@@ -75,22 +78,8 @@ def prune_model(model, percentile=50.):
       for my_weights in original_w:
         if len(my_weights.shape) < 2: # bias term, ignore for now
           continue
-        #l1norm = tf.norm(my_weights,ord=1)
-        elif len(my_weights.shape) == 2: # Dense
-          # (n_inputs, n_outputs)
-          tensor_abs = tf.abs(my_weights)
-          tensor_reduce_max_1 = tf.reduce_max(tensor_abs,axis=-1)
-          tensor_reduce_max_2 = tf.reduce_max(tensor_reduce_max_1,axis=-1)
-        elif len(my_weights.shape) == 3: # Conv1D
-          # (filter_width, n_inputs, n_filters)
-          tensor_abs = tf.abs(my_weights)
-          tensor_reduce_max_0 = tf.reduce_max(tensor_abs,axis=-1)
-          tensor_reduce_max_1 = tf.reduce_max(tensor_reduce_max_0,axis=-1)
-          tensor_reduce_max_2 = tf.reduce_max(tensor_reduce_max_1,axis=-1)
-        with tf.Session():
-          #l1norm_val = float(l1norm.eval())
-          tensor_max = float(tensor_reduce_max_2.eval())
-        assert(tensor_max == tensorMaxByLayer[layer.name])
+
+        tensor_max = tensorMaxByLayer[layer.name]
         binaryTensorPerLayer[layer.name] = np.ones(my_weights.shape, dtype=np.bool)
         it = np.nditer(my_weights, flags=['multi_index'], op_flags=['readonly'])
         while not it.finished:

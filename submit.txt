@@ -1,8 +1,8 @@
 # To submit (short=8hrs/normal=24hrs/long=72hrs):
-#sbatch -p short test.sh
-#sbatch -p normal test_jupyter.sh
-#sbatch -p long test_skopt.sh
-#sbatch -p long test_gridsearch.sh
+#sbatch -p short -C XL270dG9 test.sh
+#sbatch -p normal -C XL270dG9 test_jupyter.sh
+#sbatch -p long -C XL270dG9 test_skopt.sh
+#sbatch -p long -C XL270dG9 test_gridsearch.sh
 
 # To check:
 #squeue

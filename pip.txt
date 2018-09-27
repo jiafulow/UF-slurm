@@ -1,0 +1,1 @@
+pip install keras sklearn matplotlib jupyter scikit-optimize

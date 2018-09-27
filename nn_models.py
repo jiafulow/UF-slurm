@@ -36,6 +36,28 @@ def NewElu(x, alpha=1.0):
   return K.elu(x, alpha) + alpha*1.0 + 1e-15
 
 # ______________________________________________________________________________
+def count_params(nvariables=80, nodes1=64, nodes2=32, nodes3=16, npredictions=1, use_bn=False):
+  n = 0
+  if use_bn:
+    # Hidden layer 1
+    n += (nvariables * nodes1 + 4*nodes1)
+    # Hidden layer 2
+    n += (nodes1 * nodes2 + 4*nodes2)
+    # Hidden layer 3
+    n += (nodes2 * nodes3 + 4*nodes3)
+    # Output layer
+    n += (nodes3 * 1 + 1) * npredictions
+  else:
+    # Hidden layer 1
+    n += (nvariables * nodes1 + nodes1)
+    # Hidden layer 2
+    n += (nodes1 * nodes2 + nodes2)
+    # Hidden layer 3
+    n += (nodes2 * nodes3 + nodes3)
+    # Output layer
+    n += (nodes3 * 1 + 1) * npredictions
+  return n
+
 class LCountParams(Regularizer):
   """Regularizer that penalizes large number of parameters.
   Copied from class L1L2 from https://github.com/keras-team/keras/blob/master/keras/regularizers.py
@@ -158,94 +180,15 @@ def update_keras_custom_objects():
 
 # ______________________________________________________________________________
 # Create models
-def create_model(nvariables, lr=0.001, nodes1=64, nodes2=32, nodes3=16, discr_loss_weight=1.0, l1_reg=0.0, l2_reg=0.0):
+def create_model(nvariables, lr=0.001, clipnorm=10., nodes1=64, nodes2=32, nodes3=16, discr_loss_weight=1.0, l1_reg=0.0, l2_reg=0.0):
   regularizer = regularizers.l1_l2(l1=l1_reg, l2=l2_reg)
   inputs = Input(shape=(nvariables,), dtype='float32')
 
   x = Dense(nodes1, activation='tanh', kernel_initializer='glorot_uniform', kernel_regularizer=regularizer)(inputs)
-  #x = Dropout(0.2)(x)
   if nodes2:
     x = Dense(nodes2, activation='tanh', kernel_initializer='glorot_uniform', kernel_regularizer=regularizer)(x)
-    #x = Dropout(0.2)(x)
     if nodes3:
       x = Dense(nodes3, activation='tanh', kernel_initializer='glorot_uniform', kernel_regularizer=regularizer)(x)
-      #x = Dropout(0.2)(x)
-
-  regr = Dense(1, activation='linear', kernel_initializer='glorot_uniform', name='regr')(x)
-  discr = Dense(1, activation='sigmoid', kernel_initializer='glorot_uniform', name='discr')(x)
-
-  # This creates a model that includes
-  # the Input layer, three Dense layers and the Output layer
-  model = Model(inputs=inputs, outputs=[regr, discr])
-
-  # Set loss and optimizers
-  #binary_crossentropy = losses.binary_crossentropy
-  #mean_squared_error = losses.mean_squared_error
-
-  adam = optimizers.Adam(lr=lr)
-  model.compile(optimizer=adam,
-    loss={'regr': masked_huber_loss, 'discr': masked_binary_crossentropy},
-    loss_weights={'regr': 1.0, 'discr': discr_loss_weight},
-    #metrics={'regr': ['acc', 'mse', 'mae'], 'discr': ['acc',]}
-    )
-  model.summary()
-  return model
-
-# ______________________________________________________________________________
-def create_model_bn(nvariables, lr=0.001, nodes1=64, nodes2=32, nodes3=16, discr_loss_weight=1.0, l1_reg=0.0, l2_reg=0.0, use_bn=True):
-  regularizer = regularizers.L1L2(l1=l1_reg, l2=l2_reg)
-  inputs = Input(shape=(nvariables,), dtype='float32')
-
-  x = Dense(nodes1, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, use_bias=False)(inputs)
-  if use_bn: x = BatchNormalization(center=True, scale=True, epsilon=1e-4, momentum=0.9)(x)
-  x = Activation('tanh')(x)
-  if nodes2:
-    x = Dense(nodes2, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, use_bias=False)(x)
-    if use_bn: x = BatchNormalization(center=True, scale=True, epsilon=1e-4, momentum=0.9)(x)
-    x = Activation('tanh')(x)
-    if nodes3:
-      x = Dense(nodes3, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, use_bias=False)(x)
-      if use_bn: x = BatchNormalization(center=True, scale=True, epsilon=1e-4, momentum=0.9)(x)
-      x = Activation('tanh')(x)
-
-  regr = Dense(1, activation='linear', kernel_initializer='glorot_uniform', name='regr')(x)
-  discr = Dense(1, activation='sigmoid', kernel_initializer='glorot_uniform', name='discr')(x)
-
-  # This creates a model that includes
-  # the Input layer, three Dense layers and the Output layer
-  model = Model(inputs=inputs, outputs=[regr, discr])
-
-  # Set loss and optimizers
-  #binary_crossentropy = losses.binary_crossentropy
-  #mean_squared_error = losses.mean_squared_error
-
-  adam = optimizers.Adam(lr=lr)
-  model.compile(optimizer=adam,
-    loss={'regr': masked_huber_loss, 'discr': masked_binary_crossentropy},
-    loss_weights={'regr': 1.0, 'discr': discr_loss_weight},
-    #metrics={'regr': ['acc', 'mse', 'mae'], 'discr': ['acc',]}
-    )
-  model.summary()
-  return model
-
-# ______________________________________________________________________________
-def create_model_pruned(nvariables, lr=0.001, nodes1=64, nodes2=32, nodes3=16, discr_loss_weight=1.0,
-                        l1_reg=0.0, l2_reg=0.0, use_bn=True,
-                        constraint1=None, constraint2=None, constraint3=None):
-  regularizer = None  # disable
-  inputs = Input(shape=(nvariables,), dtype='float32')
-
-  x = Dense(nodes1, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, kernel_constraint=constraint1, use_bias=False)(inputs)
-  if use_bn: x = BatchNormalization(center=True, scale=True, epsilon=1e-4, momentum=0.9)(x)
-  x = Activation('tanh')(x)
-  if nodes2:
-    x = Dense(nodes2, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, kernel_constraint=constraint2, use_bias=False)(x)
-    if use_bn: x = BatchNormalization(center=True, scale=True, epsilon=1e-4, momentum=0.9)(x)
-    x = Activation('tanh')(x)
-    if nodes3:
-      x = Dense(nodes3, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, kernel_constraint=constraint3, use_bias=False)(x)
-      if use_bn: x = BatchNormalization(center=True, scale=True, epsilon=1e-4, momentum=0.9)(x)
-      x = Activation('tanh')(x)
 
   regr = Dense(1, activation='linear', kernel_initializer='glorot_uniform', name='regr')(x)
   discr = Dense(1, activation='sigmoid', kernel_initializer='glorot_uniform', name='discr')(x)
@@ -254,10 +197,82 @@ def create_model_pruned(nvariables, lr=0.001, nodes1=64, nodes2=32, nodes3=16, d
   model = Model(inputs=inputs, outputs=[regr, discr])
 
   # Set loss and optimizers
-  #binary_crossentropy = losses.binary_crossentropy
-  #mean_squared_error = losses.mean_squared_error
+  adam = optimizers.Adam(lr=lr, clipnorm=clipnorm)
+  model.compile(optimizer=adam,
+    loss={'regr': masked_huber_loss, 'discr': masked_binary_crossentropy},
+    loss_weights={'regr': 1.0, 'discr': discr_loss_weight},
+    #metrics={'regr': ['acc', 'mse', 'mae'], 'discr': ['acc',]}
+    )
+  model.summary()
+  return model
 
-  adam = optimizers.Adam(lr=lr)
+# ______________________________________________________________________________
+def create_model_bn(nvariables, lr=0.001, clipnorm=10., nodes1=64, nodes2=32, nodes3=16, discr_loss_weight=1.0,
+                    l1_reg=0.0, l2_reg=0.0, use_bn=True, use_dropout=False):
+  regularizer = regularizers.L1L2(l1=l1_reg, l2=l2_reg)
+  inputs = Input(shape=(nvariables,), dtype='float32')
+
+  x = Dense(nodes1, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, use_bias=False)(inputs)
+  if use_bn: x = BatchNormalization(epsilon=1e-4, momentum=0.9)(x)
+  x = Activation('tanh')(x)
+  if use_dropout: x = Dropout(0.2)(x)
+  if nodes2:
+    x = Dense(nodes2, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, use_bias=False)(x)
+    if use_bn: x = BatchNormalization(epsilon=1e-4, momentum=0.9)(x)
+    x = Activation('tanh')(x)
+    if use_dropout: x = Dropout(0.2)(x)
+    if nodes3:
+      x = Dense(nodes3, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, use_bias=False)(x)
+      if use_bn: x = BatchNormalization(epsilon=1e-4, momentum=0.9)(x)
+      x = Activation('tanh')(x)
+      if use_dropout: x = Dropout(0.2)(x)
+
+  regr = Dense(1, activation='linear', kernel_initializer='glorot_uniform', name='regr')(x)
+  discr = Dense(1, activation='sigmoid', kernel_initializer='glorot_uniform', name='discr')(x)
+
+  # Create model
+  model = Model(inputs=inputs, outputs=[regr, discr])
+
+  # Set loss and optimizers
+  adam = optimizers.Adam(lr=lr, clipnorm=clipnorm)
+  model.compile(optimizer=adam,
+    loss={'regr': masked_huber_loss, 'discr': masked_binary_crossentropy},
+    loss_weights={'regr': 1.0, 'discr': discr_loss_weight},
+    #metrics={'regr': ['acc', 'mse', 'mae'], 'discr': ['acc',]}
+    )
+  model.summary()
+  return model
+
+# ______________________________________________________________________________
+def create_model_pruned(nvariables, lr=0.001, clipnorm=10., nodes1=64, nodes2=32, nodes3=16, discr_loss_weight=1.0,
+                        l1_reg=0.0, l2_reg=0.0, use_bn=True, use_dropout=False,
+                        constraint1=None, constraint2=None, constraint3=None):
+  regularizer = None  # disable
+  inputs = Input(shape=(nvariables,), dtype='float32')
+
+  x = Dense(nodes1, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, kernel_constraint=constraint1, use_bias=False)(inputs)
+  if use_bn: x = BatchNormalization(epsilon=1e-4, momentum=0.9)(x)
+  x = Activation('tanh')(x)
+  if use_dropout: x = Dropout(0.2)(x)
+  if nodes2:
+    x = Dense(nodes2, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, kernel_constraint=constraint2, use_bias=False)(x)
+    if use_bn: x = BatchNormalization(epsilon=1e-4, momentum=0.9)(x)
+    x = Activation('tanh')(x)
+    if use_dropout: x = Dropout(0.2)(x)
+    if nodes3:
+      x = Dense(nodes3, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, kernel_constraint=constraint3, use_bias=False)(x)
+      if use_bn: x = BatchNormalization(epsilon=1e-4, momentum=0.9)(x)
+      x = Activation('tanh')(x)
+      if use_dropout: x = Dropout(0.2)(x)
+
+  regr = Dense(1, activation='linear', kernel_initializer='glorot_uniform', name='regr')(x)
+  discr = Dense(1, activation='sigmoid', kernel_initializer='glorot_uniform', name='discr')(x)
+
+  # Create model
+  model = Model(inputs=inputs, outputs=[regr, discr])
+
+  # Set loss and optimizers
+  adam = optimizers.Adam(lr=lr, clipnorm=clipnorm)
   model.compile(optimizer=adam,
     loss={'regr': masked_huber_loss, 'discr': masked_binary_crossentropy},
     loss_weights={'regr': 1.0, 'discr': discr_loss_weight},
@@ -293,23 +308,26 @@ def mixture_loss_for_keras(mus, sigmas, pi):
     return mixture_loss(y_true, y_pred, mus, sigmas, pi)
   return loss
 
-def create_model_mdn(nvariables, lr=0.001, nodes1=64, nodes2=32, nodes3=16, mixture=16, discr_loss_weight=1.0,
-                     l1_reg=0.0, l2_reg=0.0, use_bn=True,
+def create_model_mdn(nvariables, lr=0.001, clipnorm=10., nodes1=64, nodes2=32, nodes3=16, mixture=16, discr_loss_weight=1.0,
+                     l1_reg=0.0, l2_reg=0.0, use_bn=True, use_dropout=False,
                      constraint1=None, constraint2=None, constraint3=None):
   regularizer = None  # disable
   inputs = Input(shape=(nvariables,), dtype='float32')
 
   x = Dense(nodes1, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, kernel_constraint=constraint1, use_bias=False)(inputs)
-  if use_bn: x = BatchNormalization(center=True, scale=True, epsilon=1e-4, momentum=0.9)(x)
+  if use_bn: x = BatchNormalization(epsilon=1e-4, momentum=0.9)(x)
   x = Activation('tanh')(x)
+  if use_dropout: x = Dropout(0.2)(x)
   if nodes2:
     x = Dense(nodes2, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, kernel_constraint=constraint2, use_bias=False)(x)
-    if use_bn: x = BatchNormalization(center=True, scale=True, epsilon=1e-4, momentum=0.9)(x)
+    if use_bn: x = BatchNormalization(epsilon=1e-4, momentum=0.9)(x)
     x = Activation('tanh')(x)
+    if use_dropout: x = Dropout(0.2)(x)
     if nodes3:
       x = Dense(nodes3, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, kernel_constraint=constraint3, use_bias=False)(x)
-      if use_bn: x = BatchNormalization(center=True, scale=True, epsilon=1e-4, momentum=0.9)(x)
+      if use_bn: x = BatchNormalization(epsilon=1e-4, momentum=0.9)(x)
       x = Activation('tanh')(x)
+      if use_dropout: x = Dropout(0.2)(x)
 
   mus = Dense(mixture, activation=None, kernel_initializer='glorot_uniform', name='mus')(x)  # the means
   sigmas = Dense(mixture, activation=NewElu, kernel_initializer='glorot_uniform', name='sigmas')(x)  # the variance
@@ -321,15 +339,14 @@ def create_model_mdn(nvariables, lr=0.001, nodes1=64, nodes2=32, nodes3=16, mixt
   model = Model(inputs=inputs, outputs=outputs)
 
   # Set loss and optimizers
-  adam = optimizers.Adam(lr=lr)
+  adam = optimizers.Adam(lr=lr, clipnorm=clipnorm)
   keras_loss = mixture_loss_for_keras(mus=mus, sigmas=sigmas, pi=pi)
   model.compile(optimizer=adam, loss=keras_loss)
   model.summary()
   return model
 
-
 # ______________________________________________________________________________
-def create_model_sequential(nvariables, lr=0.001, nodes1=64, nodes2=32, nodes3=16, l1_reg=0.0, l2_reg=0.0):
+def create_model_sequential(nvariables, lr=0.001, clipnorm=10., nodes1=64, nodes2=32, nodes3=16, l1_reg=0.0, l2_reg=0.0):
   regularizer = regularizers.L1L2(l1=l1_reg, l2=l2_reg)
 
   model = Sequential()
@@ -344,29 +361,35 @@ def create_model_sequential(nvariables, lr=0.001, nodes1=64, nodes2=32, nodes3=1
 
   model.add(Dense(1, activation='linear', kernel_initializer='glorot_uniform'))
 
-  adam = optimizers.Adam(lr=lr)
+  adam = optimizers.Adam(lr=lr, clipnorm=clipnorm)
   model.compile(loss=huber_loss, optimizer=adam, metrics=['acc'])
   model.summary()
   return model
 
 # ______________________________________________________________________________
-def create_model_sequential_regularized(nvariables, lr=0.001, nodes1=64, nodes2=32, nodes3=16, l1_reg=0.0, l2_reg=0.0):
-  #regularizer = regularizers.L1L2(l1=l1_reg, l2=l2_reg)
-  regularizer = LCountParams(l1=l1_reg, l2=l2_reg)
+def create_model_sequential_bn(nvariables, lr=0.001, clipnorm=10., nodes1=64, nodes2=32, nodes3=16,
+                               l1_reg=0.0, l2_reg=0.0, use_bn=True, use_dropout=False):
+  regularizer = regularizers.L1L2(l1=l1_reg, l2=l2_reg)
 
   model = Sequential()
-  model.add(Dense(nodes1, input_dim=nvariables, activation='tanh', kernel_initializer='glorot_uniform', kernel_regularizer=regularizer))
-  #model.add(Dropout(0.2))
+  model.add(Dense(nodes1, input_dim=nvariables, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, use_bias=False))
+  if use_bn: model.add(BatchNormalization(epsilon=1e-4, momentum=0.9))
+  model.add(Activation('tanh'))
+  if use_dropout: model.add(Dropout(0.2)(x))
   if nodes2:
-    model.add(Dense(nodes2, activation='tanh', kernel_initializer='glorot_uniform', kernel_regularizer=regularizer))
-    #model.add(Dropout(0.2))
+    model.add(Dense(nodes2, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, use_bias=False))
+    if use_bn: model.add(BatchNormalization(epsilon=1e-4, momentum=0.9))
+    model.add(Activation('tanh'))
+    if use_dropout: model.add(Dropout(0.2)(x))
     if nodes3:
-      model.add(Dense(nodes3, activation='tanh', kernel_initializer='glorot_uniform', kernel_regularizer=regularizer))
-      #model.add(Dropout(0.2))
+      model.add(Dense(nodes3, kernel_initializer='glorot_uniform', kernel_regularizer=regularizer, use_bias=False))
+      if use_bn: model.add(BatchNormalization(epsilon=1e-4, momentum=0.9))
+      model.add(Activation('tanh'))
+      if use_dropout: model.add(Dropout(0.2)(x))
 
   model.add(Dense(1, activation='linear', kernel_initializer='glorot_uniform'))
 
-  adam = optimizers.Adam(lr=lr)
+  adam = optimizers.Adam(lr=lr, clipnorm=clipnorm)
   model.compile(loss=huber_loss, optimizer=adam, metrics=['acc'])
   model.summary()
   return model
@@ -386,9 +409,6 @@ def save_my_model(model, name='model'):
 def load_my_model(name='model', weights_name='model_weights'):
   with open(name + '.json', 'r') as f:
     json_string = json.dumps(json.load(f))
-    json_string = json_string.replace('"axis": [3]', '"axis": 3')  # dirty hack
-    json_string = json_string.replace('"axis": [2]', '"axis": 2')  # dirty hack
-    json_string = json_string.replace('"axis": [1]', '"axis": 1')  # dirty hack
     model = model_from_json(json_string)
   #model = load_model(name + '.h5')
   model.load_weights(weights_name + '.h5')
@@ -405,68 +425,9 @@ class NewKerasRegressor(KerasRegressor):
   """KerasRegressor with custom 'score' function
   """
 
-  def __init__(self, build_fn=None, reg_pt_scale=1.0, min_pt=20, max_pt=22, coverage=90., **sk_params):
+  def __init__(self, build_fn=None, **sk_params):
+    super(NewKerasRegressor, self).__init__(build_fn=build_fn, **sk_params)
 
-    self.reg_pt_scale = reg_pt_scale
-    self.min_pt = min_pt
-    self.max_pt = max_pt
-    self.coverage = coverage
-    self.model = None
-
-    super(KerasRegressor, self).__init__(build_fn=build_fn, **sk_params)
-
-  def score2(self, x, y, **kwargs):
-    """Returns the mean loss on the given test data and labels.
-
-    # Arguments
-        x: array-like, shape `(n_samples, n_features)`
-            Test samples where `n_samples` is the number of samples
-            and `n_features` is the number of features.
-        y: array-like, shape `(n_samples,)`
-            True labels for `x`.
-        **kwargs: dictionary arguments
-            Legal arguments are the arguments of `Sequential.evaluate`.
-
-    # Returns
-        score: float
-            Mean accuracy of predictions on `x` wrt. `y`.
-    """
-    kwargs = self.filter_sk_params(Sequential.evaluate, kwargs)
-    #loss = self.model.evaluate(x, y, **kwargs)
-
-    # Prepare y_test_true, y_test_meas
-    y_test_true = y
-    if isinstance(y_test_true, list):
-      y_test_true = y_test_true[0]
-    y_test_true = y_test_true.copy()
-    y_test_true = y_test_true.reshape(-1)
-    y_test_true /= self.reg_pt_scale
-
-    y_test_meas = self.model.predict(x, **kwargs)
-    if isinstance(y_test_meas, list):
-      y_test_meas = y_test_meas[0]
-    y_test_meas = y_test_meas.reshape(-1)
-    y_test_meas /= self.reg_pt_scale
-
-    xx = np.abs(1.0/y_test_true)
-    yy = np.abs(1.0/y_test_meas)
-
-    reweight = lambda x, y, thresh: 7.778 * np.power(x,-2.5) if y >= thresh else 0.  # -2.5 instead of -3.5 because the parent distribution is already 1/pT-weighted
-
-    xedges = [2., self.min_pt, self.max_pt, 42.]
-    inds = np.digitize(xx, xedges[1:])
-
-    xx_i = xx[inds==1]
-    yy_i = yy[inds==1]
-    pct = np.percentile(yy_i, [100-self.coverage], overwrite_input=True)
-
-    thresh = pct[0]
-    yw = np.fromiter((reweight(xi, yi, thresh) for (xi, yi) in zip(xx, yy)), xx.dtype)
-
-    loss = np.sum(yw)
-
-    #print "min_pt {0} max_pt {1} coverage {2} thresh {3} loss {4}".format(self.min_pt, self.max_pt, self.coverage, thresh, loss)
-
-    if isinstance(loss, list):
-      return -loss[0]
-    return -loss
+  def fit(self, x, y, **kwargs):
+    print('.. fitting x (shape:{0}) & y (shape:{1}) with params: {2} & {3}'.format(x.shape, y.shape, self.filter_sk_params(self.build_fn), kwargs))
+    return super(NewKerasRegressor, self).fit(x, y, **kwargs)

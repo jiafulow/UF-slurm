@@ -2,7 +2,7 @@ import numpy as np
 
 nlayers = 12  # 5 (CSC) + 4 (RPC) + 3 (GEM)
 
-nvariables = (nlayers * 6) + 8
+nvariables = (nlayers * 6) + 3 - 32
 
 nvariables_input = (nlayers * 7) + 3
 
@@ -61,7 +61,7 @@ class Encoder(object):
       self.x_time [x_dropit] = np.nan
       self.x_ring [x_dropit] = np.nan
       self.x_fr   [x_dropit] = np.nan
-      self.x_mask [x_dropit] = 1.0
+      self.x_mask [x_dropit] = 1
 
       # Make event weight
       #self.w       = np.ones(self.y_pt.shape, dtype=np.float32)
@@ -114,15 +114,20 @@ class Encoder(object):
         #theta_cuts    = np.array((6., 6., 6., 6., 6., 10., 10., 10., 10., 8., 8., 8.), dtype=np.float32)
         #x_theta_tmp   = np.where(np.isnan(self.x_theta), 99., self.x_theta)  # take care of nan
         #x_theta_tmp   = np.abs(x_theta_tmp) > theta_cuts
-        self.x_bend[:, 5:9] = 0  # do not use RPC bend
-        x_ring_tmp    = self.x_ring.astype(np.int32)
-        x_ring_tmp    = (x_ring_tmp == 2) | (x_ring_tmp == 3) | (x_ring_tmp == 4)
-        self.x_ring[x_ring_tmp] = 1  # ring 2,3,4 -> 1; also differentiate ring 4 (ME1/1a) from ring 1 (ME1/1b)
-        self.x_ring[~x_ring_tmp] = 0 # ring 1 -> 0
-        x_fr_tmp      = self.x_fr.astype(np.int32)
-        x_fr_tmp      = (x_fr_tmp == 1)
-        self.x_fr[x_fr_tmp] = 1   # front chamber -> 1
-        self.x_fr[~x_fr_tmp] = 0  # rear chamber  -> 0
+        if True:  # modify ring and F/R definitions
+          x_ring_tmp    = self.x_ring.astype(np.int32)
+          x_ring_tmp    = (x_ring_tmp == 2) | (x_ring_tmp == 3) | (x_ring_tmp == 4)
+          self.x_ring[x_ring_tmp]  = 1 # ring 2,3,4 -> 1; also differentiate ring 4 (ME1/1a) from ring 1 (ME1/1b)
+          self.x_ring[~x_ring_tmp] = 0 # ring 1 -> 0
+          x_fr_tmp      = self.x_fr.astype(np.int32)
+          x_fr_tmp      = (x_fr_tmp == 1)
+          self.x_fr[x_fr_tmp]  = 1  # front chamber -> 1
+          self.x_fr[~x_fr_tmp] = 0  # rear chamber  -> 0
+        if True:  # zero out some variables
+          self.x_bend[:, 5:11] = 0  # no bend for RPC, GEM
+          self.x_time[:, :]    = 0  # no time for everyone
+          self.x_ring[:, 5:12] = 0  # no ring for RPC, GEM, ME0
+          self.x_fr[:, 5:12]   = 0  # no F/R for RPC, GEM, ME0
         s = [ 0.005083,  0.019142, -0.015694, -0.010744, -0.007120,  0.021043,
              -0.042957, -0.009228, -0.006421,  0.003815, -0.015731,  0.003477,
               0.596512,  0.592788,  1.459119,  1.507292,  1.062175,  0.228293,
@@ -147,7 +152,7 @@ class Encoder(object):
       #self.x_time [x_theta_tmp] = np.nan
       #self.x_ring [x_theta_tmp] = np.nan
       #self.x_fr   [x_theta_tmp] = np.nan
-      #self.x_mask [x_theta_tmp] = 1.0
+      #self.x_mask [x_theta_tmp] = 1
 
       # Add variables: straightness, zone, theta_median and mode variables
       self.x_straightness = (self.x_straightness - 6.) / 6.   # scaled to [-1,1]
@@ -189,16 +194,24 @@ class Encoder(object):
     x[np.isnan(x)] = 0.0
     return x
 
-  def get_x(self):
+  def get_x(self, drop_columns_of_zeroes=True):
+    x_new = np.hstack((self.x_phi, self.x_theta, self.x_bend,
+                       self.x_time, self.x_ring, self.x_fr,
+                       self.x_straightness, self.x_zone, self.x_theta_median))
     # Drop input nodes
-    x_valid = np.ones((nlayers,), dtype=np.bool)
-    #x_valid[9]  = 0  # 9: GE1/1
-    #x_valid[10] = 0  # 10: GE2/1
-    #x_valid[11] = 0  # 11: ME0
+    if drop_columns_of_zeroes:
+      drop_phi   = [nlayers*0 + x for x in xrange(0,0)]  # keep everyone
+      drop_theta = [nlayers*1 + x for x in xrange(0,0)]  # keep everyone
+      drop_bend  = [nlayers*2 + x for x in xrange(5,11)] # no bend for RPC, GEM
+      drop_time  = [nlayers*3 + x for x in xrange(0,12)] # no time for everyone
+      drop_ring  = [nlayers*4 + x for x in xrange(5,12)] # no ring for RPC, GEM, ME0
+      drop_fr    = [nlayers*5 + x for x in xrange(5,12)] # no F/R for RPC, GEM, ME0
 
-    x_new = np.hstack((self.x_phi[:,x_valid], self.x_theta[:,x_valid], self.x_bend[:,x_valid],
-                       self.x_time[:,x_valid], self.x_ring[:,x_valid], self.x_fr[:,x_valid],
-                       self.x_straightness, self.x_zone, self.x_theta_median, self.x_mode_vars))
+      x_dropit = np.zeros(x_new.shape[1], dtype=np.bool)
+      for i in drop_phi + drop_theta + drop_bend + drop_time + drop_ring + drop_fr:
+        x_dropit[i] = True
+
+      x_new = x_new[:, ~x_dropit]
     return x_new
 
   def get_x_mask(self):

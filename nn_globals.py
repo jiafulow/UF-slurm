@@ -7,7 +7,10 @@ logger = getLogger()
 adjust_scale = 3
 
 #learning_rate = 0.00113
-learning_rate = 0.0033
+#learning_rate = 0.0033
+learning_rate = 0.005
+
+gradient_clip_norm = 100.
 
 mask_value = 100.
 
@@ -25,18 +28,9 @@ l1_reg = 0.0
 
 l2_reg = 0.0
 
-infile_muon = '../test7/histos_tba.17.npz'
+infile_muon = '../test7/histos_tba.18.npz'
 
-infile_pileup = '../test7/histos_tbd.17.npz'
-
-infile_images = '../test7/histos_tbe.17.npz'
-
-
-use_hpe = True
-if use_hpe:
-  infile_muon = '/scratch/CMS/L1MuonTrigger/P2_10_1_5/SingleMuon_Toy_2GeV/histos_tba.17.npz'
-  infile_pileup = '/scratch/CMS/L1MuonTrigger/P2_10_1_5/SingleMuon_Toy_2GeV/histos_tbd.17.npz'
-  infile_images = '/scratch/CMS/L1MuonTrigger/P2_10_1_5/SingleMuon_Toy_2GeV/histos_tbe.17.npz'
+infile_pileup = '../test7/histos_tbd.18.npz'
 
 
 # ______________________________________________________________________________

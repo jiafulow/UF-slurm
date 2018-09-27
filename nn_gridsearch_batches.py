@@ -71,13 +71,13 @@ callbacks_list = [lr_decay,modelbestcheck]
 
 from sklearn.model_selection import cross_val_score, cross_validate, KFold, GridSearchCV
 
-nodes1 = [30,40,60,80]
-nodes2 = [20,30,40]
-nodes3 = [10,20,30]
-lr = [0.001, 0.01]
+nodes1 = [32,40,64,80,128]
+nodes2 = [16,24,32,48]
+nodes3 = [16,24,32,48]
+lr = [0.001, 0.005, 0.01, 0.1]
 batches = [256, 512, 1024, 4096]
-param_grid = dict(lr=lr, nodes1=nodes1, nodes2=nodes2, nodes3=nodes3)
-#param_grid = dict(lr=lr, batch_size=batches)
+#param_grid = dict(lr=lr, nodes1=nodes1, nodes2=nodes2, nodes3=nodes3)
+param_grid = dict(lr=lr, batch_size=batches)
 logger.info('Using parameter grid: %r' % param_grid)
 
 opt = GridSearchCV(estimator=estimator, param_grid=param_grid,

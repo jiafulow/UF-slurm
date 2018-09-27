@@ -1,2 +1,6 @@
 #srun -N1 -l nvidia-smi
-#srun --pty -p short /bin/bash
+#srun --pty -p short -C XL270dG9 /bin/bash
+#sinfo
+
+# To check constraints
+#lshosts

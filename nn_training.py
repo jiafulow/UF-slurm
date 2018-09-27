@@ -21,6 +21,10 @@ class TrainingLog(object):
     self.stdout = sys.stdout
   def __del__(self):
     self.file.close()
+  def __enter__(self):
+    sys.stdout = self
+  def __exit__(self, type, value, traceback):
+    sys.stdout = self.stdout
   def write(self, msg):
     self.file.write(msg)
   def flush(self):
@@ -33,18 +37,11 @@ def train_model(model, x, y, model_name='model', batch_size=None, epochs=1, verb
   start_time = datetime.datetime.now()
   logger.info('Begin training ...')
 
-  # Redirect sys.stdout
-  log = TrainingLog()
-  sys.stdout = log
-
-  history = model.fit(x, y, batch_size=batch_size, epochs=epochs, verbose=verbose, callbacks=callbacks,
-                      validation_split=validation_split, shuffle=shuffle, class_weight=class_weight, sample_weight=sample_weight)
-
-  # Restore sys.stdout
-  sys.stdout = log.stdout
-
-  save_my_model(model, name=model_name)
+  with TrainingLog() as tlog:  # redirect sys.stdout
+    history = model.fit(x, y, batch_size=batch_size, epochs=epochs, verbose=verbose, callbacks=callbacks,
+                        validation_split=validation_split, shuffle=shuffle, class_weight=class_weight, sample_weight=sample_weight)
 
   logger.info('Done training. Time elapsed: {0} sec'.format(str(datetime.datetime.now() - start_time)))
-  return history
 
+  save_my_model(model, name=model_name)
+  return history
